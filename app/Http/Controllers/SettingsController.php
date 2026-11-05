@@ -22,6 +22,7 @@ class SettingsController extends Controller
             'anchor' => $anchor,
             'currentPeriod' => PayPeriod::containing(CarbonImmutable::today(), $anchor),
             'hourlyRate' => Setting::hourlyRate(),
+            'anchorIsLocked' => Setting::payPeriodAnchorIsLocked(),
         ]);
     }
 
@@ -30,7 +31,10 @@ class SettingsController extends Controller
      */
     public function update(UpdateSettingsRequest $request): RedirectResponse
     {
-        Setting::store('pay_period_anchor', $request->validated('pay_period_anchor'));
+        if ($request->has('pay_period_anchor')) {
+            Setting::store('pay_period_anchor', $request->validated('pay_period_anchor'));
+        }
+
         Setting::store('hourly_rate', $request->validated('hourly_rate'));
 
         return redirect()->route('settings.edit')->with('status', 'Settings saved.');

@@ -38,7 +38,7 @@ class AuthenticationTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('Log in')
-            ->assertDontSee('Weekly schedule');
+            ->assertDontSee('Calendar');
     }
 
     public function test_users_can_log_in_and_are_sent_to_the_page_they_wanted(): void

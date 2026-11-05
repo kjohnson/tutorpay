@@ -8,6 +8,7 @@
     --accent-soft: #e8efff;
     --positive: #157a3f;
     --negative: #b42318;
+    --negative-soft: #fdecea;
     --radius: 10px;
     color-scheme: light;
 }
@@ -23,6 +24,7 @@
         --accent-soft: #1f2a44;
         --positive: #4cc07a;
         --negative: #f07167;
+        --negative-soft: #3a1d1d;
         color-scheme: dark;
     }
 }
@@ -57,12 +59,15 @@ h2 { font-size: 1rem; margin: 0; }
 .checkbox input { min-height: 0; }
 
 .flash { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; }
+.flash.error { background: var(--negative-soft); border-color: var(--negative); }
 
 .period-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .period-header p { margin: 0; }
 .eyebrow { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
 .badge { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; letter-spacing: 0; text-transform: none; }
 .pager { display: flex; gap: 8px; }
+.period-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.badge.paid { background: var(--positive); }
 
 .stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-bottom: 20px; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 0 calc((100% - 36px) / 4); }
@@ -119,6 +124,7 @@ input, select {
     min-height: 36px;
 }
 input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+input:disabled { opacity: 0.6; cursor: not-allowed; }
 
 
 .button {
@@ -142,6 +148,7 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
     .day-detail { grid-column: 1 / -1; grid-row: 2; }
     .day-total { grid-row: 1; grid-column: 2; }
     .stat { flex-basis: calc((100% - 12px) / 2); }
-    .pager { width: 100%; }
+    .period-actions, .pager { width: 100%; }
+    .period-actions form, .period-actions .button { flex: 1; }
     .pager .button { flex: 1; }
 }

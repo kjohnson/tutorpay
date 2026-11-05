@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClosedPayPeriod;
 use App\Models\Setting;
 use App\Support\PayPeriod;
 use App\Support\Timesheet;
@@ -31,6 +32,8 @@ class PayPeriodController extends Controller
             'today' => $today,
             'isCurrentPeriod' => $period->contains($today),
             'hourlyRate' => Setting::hourlyRate(),
+            'closedPeriod' => ClosedPayPeriod::forPeriod($period),
+            'hasStarted' => ! $period->start->isAfter($today),
         ]);
     }
 }

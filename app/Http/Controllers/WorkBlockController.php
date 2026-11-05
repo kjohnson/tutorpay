@@ -3,16 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveTimeBlockRequest;
+use App\Models\ClosedPayPeriod;
 use App\Models\ScheduleBlock;
 use App\Models\WorkBlock;
 use App\Models\WorkDay;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 
 /**
  * Adds, edits and deletes blocks of time on a specific day. The first change
  * to a day copies the weekly schedule onto it, so the day keeps its own
- * blocks from then on.
+ * blocks from then on. Days in a pay period marked as paid can't be changed.
  */
 class WorkBlockController extends Controller
 {
@@ -22,6 +24,8 @@ class WorkBlockController extends Controller
     public function store(SaveTimeBlockRequest $request, string $date): RedirectResponse
     {
         $day = $this->parseDate($date);
+
+        $this->ensureNotClosed($day);
 
         WorkDay::forDate($day)->blocks()->create($request->blockAttributes());
 
@@ -33,6 +37,8 @@ class WorkBlockController extends Controller
      */
     public function update(SaveTimeBlockRequest $request, WorkBlock $workBlock): RedirectResponse
     {
+        $this->ensureNotClosed(CarbonImmutable::instance($workBlock->workDay->date));
+
         $workBlock->update($request->blockAttributes());
 
         return $this->backToDay(CarbonImmutable::instance($workBlock->workDay->date), 'Block updated.');
@@ -44,6 +50,8 @@ class WorkBlockController extends Controller
     public function updateScheduled(SaveTimeBlockRequest $request, string $date, ScheduleBlock $scheduleBlock): RedirectResponse
     {
         $day = $this->parseDate($date);
+
+        $this->ensureNotClosed($day);
 
         $this->copyOfScheduleBlock($day, $scheduleBlock)->update($request->blockAttributes());
 
@@ -57,6 +65,8 @@ class WorkBlockController extends Controller
     {
         $day = CarbonImmutable::instance($workBlock->workDay->date);
 
+        $this->ensureNotClosed($day);
+
         $workBlock->delete();
 
         return $this->backToDay($day, 'Block deleted.');
@@ -69,6 +79,8 @@ class WorkBlockController extends Controller
     {
         $day = $this->parseDate($date);
 
+        $this->ensureNotClosed($day);
+
         $this->copyOfScheduleBlock($day, $scheduleBlock)->delete();
 
         return $this->backToDay($day, 'Block deleted for this day.');
@@ -80,6 +92,8 @@ class WorkBlockController extends Controller
     public function reset(string $date): RedirectResponse
     {
         $day = $this->parseDate($date);
+
+        $this->ensureNotClosed($day);
 
         WorkDay::query()->whereDate('date', $day->toDateString())->delete();
 
@@ -94,6 +108,22 @@ class WorkBlockController extends Controller
         abort_unless($scheduleBlock->day_of_week === $day->dayOfWeek, 404);
 
         return WorkDay::forDate($day)->blocks()->where('schedule_block_id', $scheduleBlock->id)->firstOrFail();
+    }
+
+    /**
+     * Send the user back with an error when the day is in a paid pay period.
+     *
+     * @throws HttpResponseException
+     */
+    private function ensureNotClosed(CarbonImmutable $day): void
+    {
+        if (ClosedPayPeriod::coversDate($day)) {
+            throw new HttpResponseException(
+                redirect()
+                    ->route('pay-period.show', ['date' => $day->toDateString()])
+                    ->with('error', 'This pay period has been marked as paid, so its hours can’t be changed.')
+            );
+        }
     }
 
     private function parseDate(string $date): CarbonImmutable
