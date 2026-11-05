@@ -159,6 +159,8 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
 .errors { color: var(--negative); margin: 8px 0 0; padding-left: 18px; font-size: 0.85rem; }
 
 @media (max-width: 600px) {
+    .header-inner { gap: 4px 16px; padding-top: 10px; padding-bottom: 6px; }
+    .brand { flex-basis: 100%; text-align: center; }
     .day { grid-template-columns: 1fr auto; }
     .day-date { flex-direction: row; gap: 8px; align-items: baseline; }
     .day-detail { grid-column: 1 / -1; grid-row: 2; }
