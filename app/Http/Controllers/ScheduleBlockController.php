@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreScheduleBlockRequest;
 use App\Models\ScheduleBlock;
+use App\Models\WorkDay;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ScheduleBlockController extends Controller
@@ -30,10 +32,14 @@ class ScheduleBlockController extends Controller
      */
     public function store(StoreScheduleBlockRequest $request): RedirectResponse
     {
-        ScheduleBlock::create([
-            'day_of_week' => $request->integer('day_of_week'),
-            ...$request->blockAttributes(),
-        ]);
+        DB::transaction(function () use ($request): void {
+            WorkDay::freezeUnpaidPast($request->integer('day_of_week'));
+
+            ScheduleBlock::create([
+                'day_of_week' => $request->integer('day_of_week'),
+                ...$request->blockAttributes(),
+            ]);
+        });
 
         return redirect()->route('schedule.index')->with('status', 'Time added to the weekly schedule.');
     }
@@ -43,7 +49,11 @@ class ScheduleBlockController extends Controller
      */
     public function destroy(ScheduleBlock $scheduleBlock): RedirectResponse
     {
-        $scheduleBlock->delete();
+        DB::transaction(function () use ($scheduleBlock): void {
+            WorkDay::freezeUnpaidPast($scheduleBlock->day_of_week);
+
+            $scheduleBlock->delete();
+        });
 
         return redirect()->route('schedule.index')->with('status', 'Time removed from the weekly schedule.');
     }

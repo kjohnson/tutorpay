@@ -4,16 +4,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Pay Period Anchor
+    | Track Hours From
     |--------------------------------------------------------------------------
     |
-    | Any date that begins a pay period. Every pay period runs fourteen
-    | days from its start date, and the tutor is paid on the day after it
-    | ends. This can be overridden from the Settings page.
+    | The earliest day whose hours count as unpaid. The weekly schedule
+    | repeats forever, so this keeps older days out of the unpaid total.
+    | Defaults to today when not set here or on the Settings page.
     |
     */
 
-    'pay_period_anchor' => env('TUTORPAY_PAY_PERIOD_ANCHOR', '2026-01-01'),
+    'track_hours_from' => env('TUTORPAY_TRACK_HOURS_FROM'),
 
     /*
     |--------------------------------------------------------------------------

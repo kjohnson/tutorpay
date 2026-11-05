@@ -51,8 +51,6 @@ h2 { font-size: 1rem; margin: 0; }
 .nav { display: flex; gap: 4px; flex-wrap: wrap; }
 .nav a { color: var(--muted); padding: 6px 10px; border-radius: 6px; }
 .nav a.active, .nav a:hover { color: var(--text); background: var(--accent-soft); }
-.nav-button { font: inherit; color: var(--muted); background: none; border: 0; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-.nav-button:hover { color: var(--text); background: var(--accent-soft); }
 .auth-card { max-width: 400px; margin: 48px auto; }
 .auth-card h1 { margin-bottom: 16px; }
 .checkbox { display: flex; gap: 8px; align-items: center; font-size: 0.9rem; }
@@ -63,12 +61,26 @@ h2 { font-size: 1rem; margin: 0; }
 
 .period-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .period-header p { margin: 0; }
-.eyebrow { text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
-.badge { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; margin-left: 6px; letter-spacing: 0; text-transform: none; }
+.eyebrow { display: flex; align-items: center; gap: 6px; height: 20px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+.badge { display: inline-flex; align-items: center; height: 18px; line-height: 1; background: var(--accent); color: #fff; border-radius: 999px; padding: 0 8px; letter-spacing: 0; text-transform: none; }
 .pager { display: flex; gap: 8px; }
 .period-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .badge.paid { background: var(--positive); }
 .period-footer { display: flex; justify-content: flex-end; margin-bottom: 32px; }
+.day.paid, .day.untracked { color: var(--muted); }
+.day.paid .day-name, .day.paid .day-total, .day.untracked .day-name, .day.untracked .day-total { color: var(--muted); font-weight: 500; }
+.day.paid .day-detail, .day.paid .day-date > .muted, .day.untracked .day-detail, .day.untracked .day-date > .muted { opacity: 0.75; }
+.day-total { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; }
+.lock { color: var(--muted); opacity: 0.5; line-height: 1; align-self: center; }
+.lock:hover { opacity: 0.9; }
+.day-check { flex-direction: row; gap: 10px; align-items: flex-start; cursor: pointer; }
+.day-check > span { display: flex; flex-direction: column; }
+.day-check input { min-height: 0; margin-top: 4px; width: 16px; height: 16px; }
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--border); }
+.table thead th { border-top: 0; font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.table .numeric { text-align: right; font-variant-numeric: tabular-nums; }
 
 .stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-bottom: 20px; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 0 calc((100% - 36px) / 4); }
@@ -78,7 +90,6 @@ h2 { font-size: 1rem; margin: 0; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
 .card > h2, .card-header { margin-bottom: 0.75rem; }
 .card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.week-total { font-weight: 650; }
 
 .days { list-style: none; margin: 0; padding: 0; }
 .day { display: grid; grid-template-columns: 130px 1fr auto; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
@@ -135,6 +146,10 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
     background: var(--accent); color: #fff; cursor: pointer;
 }
 .button.secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+.button.link { background: none; border-color: transparent; color: var(--accent); min-height: 28px; padding: 0 4px; }
+.button.link:hover { text-decoration: underline; filter: none; }
+.eyebrow-link { height: 18px; min-height: 0; padding: 0; border: 0; line-height: 1; font-size: inherit; letter-spacing: 0; text-transform: none; }
+.button.danger { background: var(--surface); color: var(--negative); border-color: var(--negative); }
 .button:hover { filter: brightness(1.05); }
 
 .inline { display: inline; }

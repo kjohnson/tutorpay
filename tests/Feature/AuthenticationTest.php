@@ -87,6 +87,16 @@ class AuthenticationTest extends TestCase
             ->assertRedirect();
     }
 
+    public function test_log_out_button_is_at_the_bottom_of_settings_not_in_the_nav(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->get(route('calendar.show'))->assertDontSee('action="'.route('logout').'"', false);
+
+        $this->get(route('settings.edit'))
+            ->assertSeeInOrder(['Change password</button>', 'action="'.route('logout').'"', 'Log out'], false);
+    }
+
     public function test_users_can_log_out(): void
     {
         $this->actingAs(User::factory()->create())

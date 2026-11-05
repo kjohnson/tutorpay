@@ -11,16 +11,13 @@
 <body>
     <header class="site-header">
         <div class="container header-inner">
-            <a href="{{ route('pay-period.show') }}" class="brand">TutorPay</a>
+            <a href="{{ route('calendar.show') }}" class="brand">TutorPay</a>
             @auth
                 <nav class="nav">
-                    <a href="{{ route('pay-period.show') }}" @class(['active' => request()->routeIs('pay-period.*')])>Calendar</a>
+                    <a href="{{ route('calendar.show') }}" @class(['active' => request()->routeIs('calendar.*')])>Calendar</a>
                     <a href="{{ route('schedule.index') }}" @class(['active' => request()->routeIs('schedule.*')])>Schedule</a>
+                    <a href="{{ route('payments.index') }}" @class(['active' => request()->routeIs('payments.*')])>Payments</a>
                     <a href="{{ route('settings.edit') }}" @class(['active' => request()->routeIs('settings.*')])>Settings</a>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="nav-button" title="Logged in as {{ auth()->user()->email }}">Log out</button>
-                    </form>
                 </nav>
             @endauth
         </div>
