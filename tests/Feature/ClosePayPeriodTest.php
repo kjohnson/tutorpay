@@ -88,6 +88,7 @@ class ClosePayPeriodTest extends TestCase
     {
         $this->get(route('pay-period.show'))
             ->assertDontSee('paid-banner')
+            ->assertSeeInOrder(['<h2>Week 2</h2>', 'Mark as paid</button>'], false)
             ->assertSee(route('pay-period.close', ['date' => '2026-11-05']))
             ->assertSee('+ Add block');
     }

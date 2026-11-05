@@ -40,13 +40,6 @@
                 @endunless
                 <a class="button secondary" href="{{ route('pay-period.show', ['date' => $period->next()->start->toDateString()]) }}">Next →</a>
             </nav>
-            @if (! $isClosed && $hasStarted)
-                <form method="POST" action="{{ route('pay-period.close', ['date' => $period->start->toDateString()]) }}"
-                      onsubmit="return confirm('Mark this pay period as paid? Its hours will be locked and can’t be changed.')">
-                    @csrf
-                    <button type="submit" class="button">Mark as paid</button>
-                </form>
-            @endif
         </div>
     </section>
 
@@ -162,4 +155,14 @@
             </ul>
         </section>
     @endforeach
+
+    @if (! $isClosed && $hasStarted)
+        <section class="period-footer">
+            <form method="POST" action="{{ route('pay-period.close', ['date' => $period->start->toDateString()]) }}"
+                  onsubmit="return confirm('Mark this pay period as paid? Its hours will be locked and can’t be changed.')">
+                @csrf
+                <button type="submit" class="button">Mark as paid</button>
+            </form>
+        </section>
+    @endif
 </x-layout>
