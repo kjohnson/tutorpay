@@ -68,6 +68,7 @@ h2 { font-size: 1rem; margin: 0; }
 .pager { display: flex; gap: 8px; }
 .period-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .badge.paid { background: var(--positive); }
+.period-footer { display: flex; justify-content: flex-end; margin-bottom: 32px; }
 
 .stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-bottom: 20px; }
 .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; flex: 0 0 calc((100% - 36px) / 4); }
@@ -149,6 +150,7 @@ input:disabled { opacity: 0.6; cursor: not-allowed; }
     .day-total { grid-row: 1; grid-column: 2; }
     .stat { flex-basis: calc((100% - 12px) / 2); }
     .period-actions, .pager { width: 100%; }
-    .period-actions form, .period-actions .button { flex: 1; }
+    .period-actions .button { flex: 1; }
+    .period-footer form, .period-footer .button { width: 100%; }
     .pager .button { flex: 1; }
 }
