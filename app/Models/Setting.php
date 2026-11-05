@@ -42,6 +42,15 @@ class Setting extends Model
     }
 
     /**
+     * The start date can't change once any pay period has been marked as paid,
+     * since that would shift the paid periods.
+     */
+    public static function payPeriodAnchorIsLocked(): bool
+    {
+        return ClosedPayPeriod::query()->exists();
+    }
+
+    /**
      * The hourly rate used to estimate pay, if one is configured.
      */
     public static function hourlyRate(): ?float

@@ -14,8 +14,8 @@
             <a href="{{ route('pay-period.show') }}" class="brand">TutorPay</a>
             @auth
                 <nav class="nav">
-                    <a href="{{ route('pay-period.show') }}" @class(['active' => request()->routeIs('pay-period.*')])>Pay period</a>
-                    <a href="{{ route('schedule.index') }}" @class(['active' => request()->routeIs('schedule.*')])>Weekly schedule</a>
+                    <a href="{{ route('pay-period.show') }}" @class(['active' => request()->routeIs('pay-period.*')])>Calendar</a>
+                    <a href="{{ route('schedule.index') }}" @class(['active' => request()->routeIs('schedule.*')])>Schedule</a>
                     <a href="{{ route('settings.edit') }}" @class(['active' => request()->routeIs('settings.*')])>Settings</a>
                     <form method="POST" action="{{ route('logout') }}" class="inline">
                         @csrf
@@ -29,6 +29,10 @@
     <main class="container">
         @if (session('status'))
             <div class="flash" role="status">{{ session('status') }}</div>
+        @endif
+
+        @if (session('error'))
+            <div class="flash error" role="alert">{{ session('error') }}</div>
         @endif
 
         {{ $slot }}

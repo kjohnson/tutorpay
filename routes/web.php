@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\ClosedPayPeriodController;
 use App\Http\Controllers\PayPeriodController;
 use App\Http\Controllers\ScheduleBlockController;
 use App\Http\Controllers\SettingsController;
@@ -18,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     Route::get('/', [PayPeriodController::class, 'show'])->name('pay-period.show');
+    Route::post('/pay-periods/{date}/close', [ClosedPayPeriodController::class, 'store'])->name('pay-period.close');
 
     Route::get('/schedule', [ScheduleBlockController::class, 'index'])->name('schedule.index');
     Route::post('/schedule', [ScheduleBlockController::class, 'store'])->name('schedule.store');
@@ -32,4 +35,5 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/settings/password', [PasswordController::class, 'update'])->name('settings.password.update');
 });
