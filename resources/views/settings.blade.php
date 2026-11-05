@@ -2,13 +2,7 @@
     <section class="period-header">
         <div>
             <p class="eyebrow">Settings</p>
-            <h1>Pay schedule</h1>
-            <p class="muted">
-                Pay periods run for two weeks starting on the date below, and are paid the day after
-                each period ends. The current period is
-                <strong>{{ $currentPeriod->start->format('D, M j') }} – {{ $currentPeriod->end->format('D, M j, Y') }}</strong>,
-                paid {{ $currentPeriod->payday()->format('D, M j') }}.
-            </p>
+            <h1>Pay settings</h1>
         </div>
     </section>
 
@@ -17,19 +11,14 @@
             @csrf
             @method('PUT')
             <label class="field">
-                <span>Pay period start date</span>
-                @if ($anchorIsLocked)
-                    <input type="date" value="{{ $anchor->toDateString() }}" disabled>
-                    <small class="muted">Locked because a pay period has been marked as paid. Changing it would shift periods that have already been paid.</small>
-                @else
-                    <input type="date" name="pay_period_anchor" required value="{{ old('pay_period_anchor', $anchor->toDateString()) }}">
-                    <small class="muted">Any day of the week works. Pick the first day of any past or upcoming pay period; every other period is calculated from it.</small>
-                @endif
+                <span>Track hours from</span>
+                <input type="date" name="track_hours_from" required max="{{ now()->toDateString() }}" value="{{ old('track_hours_from', $trackHoursFrom->toDateString()) }}">
+                <small class="muted">Days before this never count as unpaid. The weekly schedule repeats forever, so this keeps older days out of your totals.</small>
             </label>
             <label class="field">
                 <span>Hourly rate (optional)</span>
                 <input type="number" name="hourly_rate" step="0.01" min="0" placeholder="e.g. 35.00" value="{{ old('hourly_rate', $hourlyRate) }}">
-                <small class="muted">Used to show an estimated gross pay for each period.</small>
+                <small class="muted">Used for unpaid amounts and as the default rate for new payments.</small>
             </label>
             @if ($errors->any())
                 <ul class="errors">
@@ -74,6 +63,13 @@
             <div>
                 <button type="submit" class="button">Change password</button>
             </div>
+        </form>
+    </section>
+
+    <section class="period-footer">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="button secondary">Log out</button>
         </form>
     </section>
 </x-layout>

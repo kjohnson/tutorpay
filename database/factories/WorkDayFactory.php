@@ -18,7 +18,7 @@ class WorkDayFactory extends Factory
     public function definition(): array
     {
         return [
-            'date' => fake()->unique()->dateTimeBetween('-2 weeks', '+2 weeks')->format('Y-m-d'),
+            'date' => fake()->unique()->dateTimeBetween('now', '+4 weeks')->format('Y-m-d'),
         ];
     }
 }

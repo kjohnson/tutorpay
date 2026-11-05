@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Setting;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,9 +23,7 @@ class UpdateSettingsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pay_period_anchor' => Setting::payPeriodAnchorIsLocked()
-                ? ['prohibited']
-                : ['required', 'date_format:Y-m-d'],
+            'track_hours_from' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'hourly_rate' => ['nullable', 'numeric', 'min:0', 'max:10000'],
         ];
     }
@@ -39,7 +36,7 @@ class UpdateSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'pay_period_anchor.prohibited' => 'The pay period start date is locked because a pay period has been marked as paid.',
+            'track_hours_from.before_or_equal' => 'The date to track hours from can’t be in the future.',
         ];
     }
 }

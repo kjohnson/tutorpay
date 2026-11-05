@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SaveTimeBlockRequest;
-use App\Models\ClosedPayPeriod;
 use App\Models\ScheduleBlock;
+use App\Models\Setting;
 use App\Models\WorkBlock;
 use App\Models\WorkDay;
 use Carbon\CarbonImmutable;
@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 /**
  * Adds, edits and deletes blocks of time on a specific day. The first change
  * to a day copies the weekly schedule onto it, so the day keeps its own
- * blocks from then on. Days in a pay period marked as paid can't be changed.
+ * blocks from then on. Paid days, and days before hours are tracked, can't be changed.
  */
 class WorkBlockController extends Controller
 {
@@ -25,7 +25,7 @@ class WorkBlockController extends Controller
     {
         $day = $this->parseDate($date);
 
-        $this->ensureNotClosed($day);
+        $this->ensureEditable($day);
 
         WorkDay::forDate($day)->blocks()->create($request->blockAttributes());
 
@@ -37,7 +37,7 @@ class WorkBlockController extends Controller
      */
     public function update(SaveTimeBlockRequest $request, WorkBlock $workBlock): RedirectResponse
     {
-        $this->ensureNotClosed(CarbonImmutable::instance($workBlock->workDay->date));
+        $this->ensureEditable(CarbonImmutable::instance($workBlock->workDay->date));
 
         $workBlock->update($request->blockAttributes());
 
@@ -51,7 +51,7 @@ class WorkBlockController extends Controller
     {
         $day = $this->parseDate($date);
 
-        $this->ensureNotClosed($day);
+        $this->ensureEditable($day);
 
         $this->copyOfScheduleBlock($day, $scheduleBlock)->update($request->blockAttributes());
 
@@ -65,7 +65,7 @@ class WorkBlockController extends Controller
     {
         $day = CarbonImmutable::instance($workBlock->workDay->date);
 
-        $this->ensureNotClosed($day);
+        $this->ensureEditable($day);
 
         $workBlock->delete();
 
@@ -79,7 +79,7 @@ class WorkBlockController extends Controller
     {
         $day = $this->parseDate($date);
 
-        $this->ensureNotClosed($day);
+        $this->ensureEditable($day);
 
         $this->copyOfScheduleBlock($day, $scheduleBlock)->delete();
 
@@ -93,7 +93,7 @@ class WorkBlockController extends Controller
     {
         $day = $this->parseDate($date);
 
-        $this->ensureNotClosed($day);
+        $this->ensureEditable($day);
 
         WorkDay::query()->whereDate('date', $day->toDateString())->delete();
 
@@ -111,17 +111,24 @@ class WorkBlockController extends Controller
     }
 
     /**
-     * Send the user back with an error when the day is in a paid pay period.
+     * Send the user back with an error when the day has been paid or falls
+     * before the date hours are tracked from.
      *
      * @throws HttpResponseException
      */
-    private function ensureNotClosed(CarbonImmutable $day): void
+    private function ensureEditable(CarbonImmutable $day): void
     {
-        if (ClosedPayPeriod::coversDate($day)) {
+        $error = match (true) {
+            WorkDay::isPaid($day) => 'This day has been paid, so its hours can’t be changed.',
+            $day->isBefore(Setting::trackHoursFrom()) => 'This day is before the date you track hours from (see Settings), so its hours can’t be changed.',
+            default => null,
+        };
+
+        if ($error !== null) {
             throw new HttpResponseException(
                 redirect()
-                    ->route('pay-period.show', ['date' => $day->toDateString()])
-                    ->with('error', 'This pay period has been marked as paid, so its hours can’t be changed.')
+                    ->route('calendar.show', ['date' => $day->toDateString()])
+                    ->with('error', $error)
             );
         }
     }
@@ -138,7 +145,7 @@ class WorkBlockController extends Controller
     private function backToDay(CarbonImmutable $day, string $status): RedirectResponse
     {
         return redirect()
-            ->route('pay-period.show', ['date' => $day->toDateString()])
+            ->route('calendar.show', ['date' => $day->toDateString()])
             ->with('status', $status.' ('.$day->format('l, M j').')');
     }
 }

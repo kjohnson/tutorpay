@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('pay-period.show'));
+        return redirect()->intended(route('calendar.show'));
     }
 
     /**

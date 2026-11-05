@@ -5,8 +5,12 @@ namespace Tests\Feature;
 use App\Models\ScheduleBlock;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\WorkDay;
+use App\Support\Timesheet;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ScheduleTest extends TestCase
@@ -81,30 +85,65 @@ class ScheduleTest extends TestCase
 
     public function test_updates_settings(): void
     {
+        Carbon::setTestNow('2026-11-10 12:00:00');
+
         $this->put(route('settings.update'), [
-            'pay_period_anchor' => '2026-11-12',
+            'track_hours_from' => '2026-11-01',
             'hourly_rate' => '35.50',
         ])->assertRedirect(route('settings.edit'));
 
-        $this->assertSame('2026-11-12', Setting::payPeriodAnchor()->toDateString());
+        $this->assertSame('2026-11-01', Setting::trackHoursFrom()->toDateString());
         $this->assertSame(35.5, Setting::hourlyRate());
-        $this->get(route('settings.edit'))->assertOk();
+        $this->get(route('settings.edit'))->assertOk()->assertDontSee('payday');
     }
 
-    public function test_pay_period_can_start_on_any_day(): void
+    public function test_track_hours_from_cannot_be_in_the_future(): void
     {
-        $this->put(route('settings.update'), [
-            'pay_period_anchor' => '2026-11-13',
-        ])->assertSessionHasNoErrors();
+        Carbon::setTestNow('2026-11-10 12:00:00');
 
-        $this->assertSame('2026-11-13', Setting::payPeriodAnchor()->toDateString());
-        $this->get(route('pay-period.show', ['date' => '2026-11-20']))->assertSee('Fri, Nov 13 – Thu, Nov 26, 2026');
+        $this->put(route('settings.update'), [
+            'track_hours_from' => '2026-11-11',
+        ])->assertSessionHasErrors(['track_hours_from' => 'The date to track hours from can’t be in the future.']);
     }
 
-    public function test_pay_period_start_must_be_a_valid_date(): void
+    public function test_changing_the_schedule_freezes_past_unpaid_days(): void
     {
-        $this->put(route('settings.update'), [
-            'pay_period_anchor' => 'next week',
-        ])->assertSessionHasErrors('pay_period_anchor');
+        Carbon::setTestNow('2026-11-10 12:00:00');
+        Setting::store('track_hours_from', '2026-10-26');
+        $monday = ScheduleBlock::factory()->on(CarbonInterface::MONDAY, '15:00', '17:00')->create();
+        $unpaidBefore = Timesheet::unpaidThrough(CarbonImmutable::today())->totalHours();
+
+        $this->post(route('schedule.store'), [
+            'day_of_week' => CarbonInterface::MONDAY,
+            'start_time' => '18:00',
+            'end_time' => '19:00',
+        ])->assertRedirect(route('schedule.index'));
+
+        $this->delete(route('schedule.destroy', $monday))->assertRedirect(route('schedule.index'));
+
+        $this->assertSame(6.0, $unpaidBefore);
+        $this->assertSame(6.0, Timesheet::unpaidThrough(CarbonImmutable::today())->totalHours());
+        $this->assertSame(
+            ['2026-10-26', '2026-11-02', '2026-11-09'],
+            WorkDay::query()->orderBy('date')->pluck('date')->map(fn (Carbon $date): string => $date->toDateString())->all(),
+        );
+
+        $futureMonday = Timesheet::forRange(CarbonImmutable::parse('2026-11-16'), CarbonImmutable::parse('2026-11-16'));
+        $this->assertSame(1.0, $futureMonday->totalHours());
+    }
+
+    public function test_changing_the_schedule_does_not_freeze_today_or_other_weekdays(): void
+    {
+        Carbon::setTestNow('2026-11-09 12:00:00');
+        Setting::store('track_hours_from', '2026-11-01');
+
+        $this->post(route('schedule.store'), [
+            'day_of_week' => CarbonInterface::MONDAY,
+            'start_time' => '15:00',
+            'end_time' => '16:00',
+        ]);
+
+        $this->assertSame(['2026-11-02'], WorkDay::query()->pluck('date')->map(fn (Carbon $date): string => $date->toDateString())->all());
+        $this->assertSame(1.0, Timesheet::forRange(CarbonImmutable::today(), CarbonImmutable::today())->totalHours());
     }
 }

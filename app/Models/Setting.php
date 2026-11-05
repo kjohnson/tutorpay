@@ -32,22 +32,13 @@ class Setting extends Model
     }
 
     /**
-     * A date that begins a pay period, anchoring the bi-weekly cycle.
+     * The earliest day whose hours count toward unpaid hours.
      */
-    public static function payPeriodAnchor(): CarbonImmutable
+    public static function trackHoursFrom(): CarbonImmutable
     {
         return CarbonImmutable::parse(
-            static::valueFor('pay_period_anchor', config('tutorpay.pay_period_anchor'))
+            static::valueFor('track_hours_from', config('tutorpay.track_hours_from')) ?? 'today'
         )->startOfDay();
-    }
-
-    /**
-     * The start date can't change once any pay period has been marked as paid,
-     * since that would shift the paid periods.
-     */
-    public static function payPeriodAnchorIsLocked(): bool
-    {
-        return ClosedPayPeriod::query()->exists();
     }
 
     /**

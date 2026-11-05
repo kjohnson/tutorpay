@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\ClosedPayPeriodController;
-use App\Http\Controllers\PayPeriodController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ScheduleBlockController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\WorkBlockController;
@@ -19,8 +19,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-    Route::get('/', [PayPeriodController::class, 'show'])->name('pay-period.show');
-    Route::post('/pay-periods/{date}/close', [ClosedPayPeriodController::class, 'store'])->name('pay-period.close');
+    Route::get('/', [CalendarController::class, 'show'])->name('calendar.show');
+
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
 
     Route::get('/schedule', [ScheduleBlockController::class, 'index'])->name('schedule.index');
     Route::post('/schedule', [ScheduleBlockController::class, 'store'])->name('schedule.store');

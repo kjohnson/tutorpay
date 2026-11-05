@@ -3,25 +3,32 @@
 namespace App\Support;
 
 use App\Models\ScheduleBlock;
+use App\Models\Setting;
 use App\Models\WorkBlock;
 use App\Models\WorkDay;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Collection;
 
 /**
- * Works out the blocks and hours for each day of a pay period. A day uses
- * its own blocks once it has been customized, and the weekly schedule
- * otherwise.
+ * Works out the blocks and hours for each day in a date range. A day uses
+ * its own blocks once it has a WorkDay (customized, frozen or paid), and the
+ * weekly schedule otherwise. The schedule doesn't apply to days before the
+ * "track hours from" date.
  */
 final class Timesheet
 {
     /**
-     * @param  list<array{date: CarbonImmutable, blocks: Collection<int, ScheduleBlock|WorkBlock>, isCustomized: bool, totalHours: float}>  $days
+     * @param  list<array{date: CarbonImmutable, blocks: Collection<int, ScheduleBlock|WorkBlock>, isCustomized: bool, isTracked: bool, differsFromSchedule: bool, paymentId: int|null, totalHours: float}>  $days
      */
-    private function __construct(public readonly PayPeriod $period, public readonly array $days) {}
+    private function __construct(public readonly array $days) {}
 
-    public static function for(PayPeriod $period): self
+    public static function forRange(CarbonImmutable $start, CarbonImmutable $end): self
     {
+        if ($start->isAfter($end)) {
+            return new self([]);
+        }
+
         $scheduleByDay = ScheduleBlock::query()
             ->orderBy('start_time')
             ->get()
@@ -29,24 +36,67 @@ final class Timesheet
 
         $workDaysByDate = WorkDay::query()
             ->with('blocks')
-            ->whereDate('date', '>=', $period->start->toDateString())
-            ->whereDate('date', '<=', $period->end->toDateString())
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString())
             ->get()
             ->keyBy(fn (WorkDay $workDay): string => $workDay->date->toDateString());
 
-        $days = array_map(function (CarbonImmutable $date) use ($scheduleByDay, $workDaysByDate): array {
-            $workDay = $workDaysByDate->get($date->toDateString());
-            $blocks = $workDay?->blocks ?? $scheduleByDay->get($date->dayOfWeek, collect());
+        $trackHoursFrom = Setting::trackHoursFrom();
+        $days = [];
 
-            return [
+        foreach (CarbonPeriod::create($start->startOfDay(), $end->startOfDay()) as $date) {
+            $date = CarbonImmutable::instance($date);
+            $workDay = $workDaysByDate->get($date->toDateString());
+            $isTracked = ! $date->isBefore($trackHoursFrom);
+            $scheduled = $isTracked ? $scheduleByDay->get($date->dayOfWeek, collect()) : collect();
+            $blocks = $workDay?->blocks ?? $scheduled;
+
+            $days[] = [
                 'date' => $date,
                 'blocks' => $blocks,
                 'isCustomized' => $workDay !== null,
+                'isTracked' => $isTracked,
+                'differsFromSchedule' => $isTracked && $workDay !== null && self::signature($blocks) !== self::signature($scheduled),
+                'paymentId' => $workDay?->payment_id,
                 'totalHours' => round($blocks->sum('hours'), 2),
             ];
-        }, $period->dates());
+        }
 
-        return new self($period, $days);
+        return new self($days);
+    }
+
+    /**
+     * Unpaid days with hours from the tracking start date through the given
+     * date (inclusive). Through today this is the running unpaid total;
+     * through a payday it is the days that payment can include.
+     */
+    public static function unpaidThrough(CarbonImmutable $end): self
+    {
+        $timesheet = self::forRange(Setting::trackHoursFrom(), $end);
+
+        return new self(array_values(array_filter(
+            $timesheet->days,
+            fn (array $day): bool => $day['paymentId'] === null && $day['totalHours'] > 0,
+        )));
+    }
+
+    /**
+     * A comparable summary of a day's blocks: times and labels, in order.
+     *
+     * @param  Collection<int, ScheduleBlock|WorkBlock>  $blocks
+     * @return list<string>
+     */
+    private static function signature(Collection $blocks): array
+    {
+        return $blocks
+            ->map(fn (ScheduleBlock|WorkBlock $block): string => implode('|', [
+                $block::inputTime($block->start_time),
+                $block::inputTime($block->end_time),
+                (string) $block->label,
+            ]))
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**
@@ -63,12 +113,26 @@ final class Timesheet
     }
 
     /**
-     * Total hours for the first or second week of the period (1 or 2).
+     * @return list<string>
      */
-    public function weekHours(int $week): float
+    public function dateStrings(): array
     {
-        $days = array_slice($this->days, ($week - 1) * 7, 7);
+        return array_map(fn (array $day): string => $day['date']->toDateString(), $this->days);
+    }
 
-        return round(array_sum(array_column($days, 'totalHours')), 2);
+    /**
+     * The days grouped into Monday–Sunday weeks, keyed by each week's Monday.
+     *
+     * @return array<string, list<array{date: CarbonImmutable, blocks: Collection<int, ScheduleBlock|WorkBlock>, isCustomized: bool, isTracked: bool, differsFromSchedule: bool, paymentId: int|null, totalHours: float}>>
+     */
+    public function byWeek(): array
+    {
+        $weeks = [];
+
+        foreach ($this->days as $day) {
+            $weeks[$day['date']->startOfWeek(CarbonImmutable::MONDAY)->toDateString()][] = $day;
+        }
+
+        return $weeks;
     }
 }
