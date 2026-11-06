@@ -1,7 +1,8 @@
 @props(['title'])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php($theme = \App\Theme::current())
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($theme !== \App\Theme::System) data-theme="{{ $theme->value }}" @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
