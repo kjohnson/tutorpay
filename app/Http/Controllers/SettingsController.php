@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateSettingsRequest;
 use App\Models\Setting;
+use App\Theme;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -18,6 +22,26 @@ class SettingsController extends Controller
             'trackHoursFrom' => Setting::trackHoursFrom(),
             'hourlyRate' => Setting::hourlyRate(),
         ]);
+    }
+
+    /**
+     * Save the colour theme for this browser in a cookie. Choosing the
+     * system default removes the cookie.
+     */
+    public function updateAppearance(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'theme' => ['required', Rule::enum(Theme::class)],
+        ]);
+
+        $theme = Theme::from($validated['theme']);
+
+        return redirect()
+            ->route('settings.edit')
+            ->with('status', 'Appearance saved for this browser.')
+            ->withCookie($theme === Theme::System
+                ? Cookie::forget(Theme::COOKIE)
+                : Cookie::forever(Theme::COOKIE, $theme->value));
     }
 
     /**

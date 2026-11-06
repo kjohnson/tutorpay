@@ -34,6 +34,26 @@
     </section>
 
     <section class="card">
+        <h2>Appearance</h2>
+        <form method="POST" action="{{ route('settings.appearance.update') }}" class="stack-form">
+            @csrf
+            @method('PUT')
+            <fieldset class="choice-group">
+                <legend class="muted small">Theme for this browser</legend>
+                @foreach (\App\Theme::cases() as $option)
+                    <label class="checkbox">
+                        <input type="radio" name="theme" value="{{ $option->value }}" @checked(\App\Theme::current() === $option)>
+                        <span>{{ $option->label() }}</span>
+                    </label>
+                @endforeach
+            </fieldset>
+            <div>
+                <button type="submit" class="button">Save appearance</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
         <h2>Change password</h2>
         <p class="muted small">Logged in as {{ auth()->user()->email }}</p>
         <form method="POST" action="{{ route('settings.password.update') }}" class="stack-form">

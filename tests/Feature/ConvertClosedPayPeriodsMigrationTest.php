@@ -14,9 +14,11 @@ class ConvertClosedPayPeriodsMigrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const MIGRATION = 'database/migrations/2026_11_05_211451_replace_closed_pay_periods_with_payments.php';
+
     public function test_closed_pay_periods_become_payments(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1]);
+        Artisan::call('migrate:rollback', ['--path' => self::MIGRATION]);
 
         DB::table('settings')->insert(['key' => 'pay_period_anchor', 'value' => '2026-11-05', 'created_at' => now(), 'updated_at' => now()]);
         DB::table('closed_pay_periods')->insert([
@@ -32,7 +34,7 @@ class ConvertClosedPayPeriodsMigrationTest extends TestCase
             DB::table('work_days')->insert(['date' => $date, 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        Artisan::call('migrate');
+        Artisan::call('migrate', ['--path' => self::MIGRATION]);
 
         $payment = Payment::sole();
         $this->assertSame('2026-11-05', $payment->payday->toDateString());

@@ -104,7 +104,8 @@
                             </details>
 
                             @if ($day['differsFromSchedule'])
-                                <form method="POST" action="{{ route('work-days.reset', ['date' => $dateString]) }}" class="inline">
+                                <form method="POST" action="{{ route('work-days.reset', ['date' => $dateString]) }}" class="inline"
+                                      onsubmit="return confirm('Reset {{ $day['date']->format('l, M j') }} to the weekly schedule? Changes made to this day will be lost.')">
                                     @csrf
                                     @method('DELETE')
                                     <span class="muted small">Differs from weekly schedule ·</span>

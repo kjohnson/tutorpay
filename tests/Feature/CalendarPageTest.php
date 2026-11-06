@@ -212,6 +212,7 @@ class CalendarPageTest extends TestCase
 
         $this->get(route('calendar.show', ['date' => '2026-11-16']))
             ->assertSee('Differs from weekly schedule')
+            ->assertSee('onsubmit="return confirm(\'Reset Monday, Nov 16 to the weekly schedule? Changes made to this day will be lost.\')"', false)
             ->assertSee('action="'.route('work-days.reset', ['date' => '2026-11-16']).'"', false);
         $this->get(route('calendar.show', ['date' => '2026-11-23']))
             ->assertSee('action="'.route('work-days.reset', ['date' => '2026-11-23']).'"', false);
